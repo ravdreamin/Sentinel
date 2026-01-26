@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"sentinel/internal/database"
 	"sentinel/internal/models"
 
 	"github.com/PuerkitoBio/goquery"
@@ -110,12 +111,17 @@ func (p *Pool) processJob(job models.Job) {
 		return
 	}
 
-	query := "INSERT INTO results(job_id,data) VALUES ($1,$2)"
+	if job.UserID != 0 {
 
-	_, err = p.DB.Exec(context.Background(), query, job.ID, dataDb)
-	if err != nil {
-		fmt.Println("Error adding data to DB", err)
+		query := "INSERT INTO results(job_id,data) VALUES ($1,$2)"
 
+		_, err = p.DB.Exec(context.Background(), query, job.ID, dataDb)
+		if err != nil {
+			fmt.Println("Error adding data to DB", err)
+
+		}
 	}
+
+	database.UpdateJobStatus(p.DB, job.ID, "Completed")
 
 }

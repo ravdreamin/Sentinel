@@ -1,13 +1,13 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"sentinel/internal/database"
-	"sentinel/internal/models"
+	"sentinel/internal/server"
 	"sentinel/internal/worker"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -32,27 +32,13 @@ func main() {
 
 	fmt.Println("⚡ Creating jobs in DB and sending to workers...")
 
-	for i := 0; i < 10; i++ {
+	r := gin.Default()
 
-		url := "https://google.com"
-		var jobId int
-		query := "INSERT INTO jobs (url, status) VALUES ($1, 'pending') RETURNING id"
+	r.POST("/upload", server.UploadHandler)
 
-		err := dbPool.QueryRow(context.Background(), query, url).Scan(&jobId)
-		if err != nil {
-			log.Printf("Failed to insert job: %v\n", err)
-			continue
-		}
-
-		job := models.Job{
-			ID:  jobId,
-			URL: url,
-		}
-
-		workerPool.JobChan <- job
+	fmt.Println("Listening at 8081:")
+	if err := r.Run(":8081"); err != nil {
+		log.Fatal("Server failed to start: ", err)
 	}
-	close(workerPool.JobChan)
-	workerPool.Wg.Wait()
-	fmt.Println("🏁 All jobs finished!")
 
 }

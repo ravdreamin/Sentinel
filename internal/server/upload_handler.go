@@ -2,35 +2,33 @@ package server
 
 import (
 	"fmt"
-	"io"
 	"net/http"
-	"os"
+	"path/filepath"
+
+	"github.com/gin-gonic/gin"
 )
 
-func UploadHandler(resp http.ResponseWriter, req *http.Request) {
-	err := req.ParseMultipartForm(10 << 20)
+func UploadHandler(c *gin.Context) {
+	file, err := c.FormFile("document")
 	if err != nil {
-		fmt.Println("Error parsing form ", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "no file recieve",
+		})
 		return
-	}
-	doc, docHeader, err := req.FormFile("document")
-	if err != nil {
-		http.Error(resp, "message", 400)
-		return
-	}
-	dst, err := os.Create("./uploads/" + docHeader.Filename)
-	if err != nil {
-		http.Error(resp, "Unable to create the file", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-	_, err = io.Copy(dst, doc)
-	if err != nil {
-		http.Error(resp, "Unable to save the file", http.StatusInternalServerError)
-		return
-
 	}
 
-	defer doc.Close()
+	filename := filepath.Base(file.Filename)
+	dst := "./uploads/" + filename
+
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		fmt.Println("Error saving file:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to save file"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "File uploaded successfully",
+		"filename": filename,
+	})
 
 }

@@ -17,7 +17,23 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db # Ensures Adminer starts after the database
+      - db
+
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./migrations:/migrations
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://admin:password@db:5432/sentinel?sslmode=disable",
+        "up",
+      ]
+    depends_on:
+      - db
+    restart: on-failure
 
 volumes:
   postgres_data:
