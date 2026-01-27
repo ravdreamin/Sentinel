@@ -7,15 +7,10 @@ import (
 	"path/filepath"
 	"sentinel/internal/database"
 	"sentinel/internal/models"
-	"sentinel/internal/worker"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
-
-type Server struct {
-	WorkerPool *worker.Pool
-}
 
 func (s *Server) UploadHandler(c *gin.Context) {
 	file, err := c.FormFile("document")

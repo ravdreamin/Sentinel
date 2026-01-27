@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"sentinel/internal/database"
+	"sentinel/internal/email"
 	"sentinel/internal/server"
+
 	"sentinel/internal/worker"
 
 	"github.com/gin-gonic/gin"
@@ -32,16 +35,24 @@ func main() {
 	workerPool.Run()
 
 	fmt.Println("⚡ Creating jobs in DB and sending to workers...")
-	srv := server.Server{
-		WorkerPool: workerPool,
-	}
 
-	//emailClient := email.NewClient(os.Getenv("EMAIL_APIKEY"))
+	emailClient := email.NewClient(os.Getenv("EMAIL_APIKEY"))
+	srv := server.NewServer(workerPool, emailClient)
 
 	r := gin.Default()
 
 	r.POST("/upload", srv.UploadHandler)
 	r.POST("/register", srv.RegisterHandler)
+	r.POST("/verify", srv.VerifyHandler)
+	r.POST("/login", srv.LoginHandler)
+
+	protected := r.Group("/api")
+	protected.Use(srv.AuthMiddleware())
+	{
+
+		protected.GET("/profile", srv.ProfileHandler)
+
+	}
 
 	fmt.Println("Listening at 8081:")
 	if err := r.Run(":8081"); err != nil {
