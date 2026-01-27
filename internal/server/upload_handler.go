@@ -5,12 +5,19 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"sentinel/internal/database"
+	"sentinel/internal/models"
+	"sentinel/internal/worker"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-func UploadHandler(c *gin.Context) {
+type Server struct {
+	WorkerPool *worker.Pool
+}
+
+func (s *Server) UploadHandler(c *gin.Context) {
 	file, err := c.FormFile("document")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -36,19 +43,24 @@ func UploadHandler(c *gin.Context) {
 		return
 	}
 
-	urls, err = processFile(dst)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Error processing file: %s", err)})
-		return
-	}
-
-	// --- NEW VALIDATION LOGIC ---
 	validURLs := []string{}
 	for _, u := range urls {
-		// Trim whitespace (common in CSV/Text files)
 		cleanU := strings.TrimSpace(u)
+
 		if isValidURL(cleanU) {
 			validURLs = append(validURLs, cleanU)
+			job := models.Job{
+				URL: cleanU,
+			}
+
+			err := database.CreateJob(s.WorkerPool.DB, &job)
+			if err != nil {
+				fmt.Println("Failed to save job:", err)
+				continue
+			}
+
+			s.WorkerPool.JobChan <- job
+
 		}
 	}
 
