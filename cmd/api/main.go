@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"sentinel/internal/database"
-	"sentinel/internal/email"
 	"sentinel/internal/server"
 	"sentinel/internal/worker"
 
@@ -38,7 +36,7 @@ func main() {
 		WorkerPool: workerPool,
 	}
 
-	emailClient := email.NewClient(os.Getenv("EMAIL_APIKEY"))
+	//emailClient := email.NewClient(os.Getenv("EMAIL_APIKEY"))
 
 	r := gin.Default()
 
