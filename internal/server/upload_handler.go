@@ -13,11 +13,16 @@ import (
 )
 
 func (s *Server) UploadHandler(c *gin.Context) {
+	val, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID := int(val.(uint))
+
 	file, err := c.FormFile("document")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "no file recieve",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no file received"})
 		return
 	}
 
@@ -25,48 +30,40 @@ func (s *Server) UploadHandler(c *gin.Context) {
 	dst := "./uploads/" + filename
 
 	if err := c.SaveUploadedFile(file, dst); err != nil {
-		fmt.Println("Error saving file:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to save file"})
 		return
 	}
 
 	urls, err := processFile(dst)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": fmt.Sprintf("Error processing file: %s", err),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Error processing file: %s", err)})
 		return
 	}
 
-	validURLs := []string{}
-	for _, u := range urls {
-		cleanU := strings.TrimSpace(u)
-
-		if isValidURL(cleanU) {
-			validURLs = append(validURLs, cleanU)
-			job := models.Job{
-				URL: cleanU,
+	// Concurrent
+	go func(urlList []string, uid int, fPath string) {
+		for _, u := range urlList {
+			cleanU := strings.TrimSpace(u)
+			if isValidURL(cleanU) {
+				job := models.Job{
+					URL:      cleanU,
+					UserID:   uid,
+					Status:   "pending",
+					FilePath: fPath,
+					JobType:  "web",
+				}
+				if err := database.CreateJob(s.WorkerPool.DB, &job); err == nil {
+					s.WorkerPool.JobChan <- job
+				}
 			}
-
-			err := database.CreateJob(s.WorkerPool.DB, &job)
-			if err != nil {
-				fmt.Println("Failed to save job:", err)
-				continue
-			}
-
-			s.WorkerPool.JobChan <- job
-
 		}
-	}
+	}(urls, userID, dst)
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":     "File uploaded successfully",
+	c.JSON(http.StatusAccepted, gin.H{
+		"message":     "File uploaded successfully. Processing in background.",
 		"filename":    filename,
 		"total_found": len(urls),
-		"valid_urls":  len(validURLs),
-		"urls":        urls,
 	})
-
 }
 
 func isValidURL(toTest string) bool {

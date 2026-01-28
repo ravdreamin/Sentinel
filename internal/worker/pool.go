@@ -31,7 +31,7 @@ func New(db *pgxpool.Pool, concurrency int) *Pool {
 	return &Pool{
 		DB:          db,
 		Concurrency: concurrency,
-		JobChan:     make(chan models.Job, concurrency),
+		JobChan:     make(chan models.Job, 10000),
 	}
 }
 

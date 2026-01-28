@@ -31,7 +31,7 @@ func main() {
 	defer dbPool.Close()
 	fmt.Println("🚀 Sentinel Database Connection Established")
 
-	workerPool := worker.New(dbPool, 3)
+	workerPool := worker.New(dbPool, 100)
 	workerPool.Run()
 
 	fmt.Println("⚡ Creating jobs in DB and sending to workers...")
@@ -41,7 +41,6 @@ func main() {
 
 	r := gin.Default()
 
-	r.POST("/upload", srv.UploadHandler)
 	r.POST("/register", srv.RegisterHandler)
 	r.POST("/verify", srv.VerifyHandler)
 	r.POST("/login", srv.LoginHandler)
@@ -52,6 +51,7 @@ func main() {
 	{
 
 		protected.GET("/profile", srv.ProfileHandler)
+		protected.POST("/upload", srv.UploadHandler)
 		protected.POST("/set-password", srv.SetPasswordHandler)
 
 	}

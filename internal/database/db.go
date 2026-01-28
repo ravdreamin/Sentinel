@@ -22,8 +22,8 @@ func Connect() (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Pooling config error %w", err)
 	}
-	cfg.MaxConns = 10
-	cfg.MinConns = 5
+	cfg.MaxConns = 110
+	cfg.MinConns = 10
 
 	ctx := context.Background()
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
