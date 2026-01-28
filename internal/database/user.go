@@ -9,8 +9,8 @@ import (
 )
 
 func CreateUser(p *pgxpool.Pool, u *models.User) error {
-	query := "INSERT INTO users(email,password_hash) VALUES ($1,$2) RETURNING id, created_at, is_verified"
-	err := p.QueryRow(context.Background(), query, u.Email, u.PasswordHash).Scan(&u.ID, u.CreatedAt, u.IsVerified)
+	query := "INSERT INTO users(email,password_hash,is_verified) VALUES ($1,$2,$3) RETURNING id, created_at,is_verified"
+	err := p.QueryRow(context.Background(), query, u.Email, u.PasswordHash, u.IsVerified).Scan(&u.ID, u.CreatedAt, u.IsVerified)
 	if err != nil {
 		return fmt.Errorf("unable to insert user: %w", err)
 
@@ -65,4 +65,23 @@ func DeleteVerification(pool *pgxpool.Pool, userID int) error {
 	query := `DELETE FROM verifications WHERE user_id = $1`
 	_, err := pool.Exec(context.Background(), query, userID)
 	return err
+}
+
+func AddUserIdentity(p *pgxpool.Pool, userID int, provider string, providerID string) error {
+	query := `INSERT INTO user_identities (user_id, provider, provider_id)
+              VALUES ($1, $2, $3) ON CONFLICT (user_id, provider) DO NOTHING`
+	_, err := p.Exec(context.Background(), query, userID, provider, providerID)
+	if err != nil {
+		return fmt.Errorf("error adding user identity: %w", err)
+	}
+	return nil
+}
+
+func UpdateUserPassword(p *pgxpool.Pool, userID int, hash string) error {
+	query := `UPDATE users SET password_hash = $1 WHERE id = $2`
+	_, err := p.Exec(context.Background(), query, hash, userID)
+	if err != nil {
+		return fmt.Errorf("error updating user password: %w", err)
+	}
+	return nil
 }

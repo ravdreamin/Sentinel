@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sentinel/internal/database"
@@ -35,10 +37,10 @@ func (s *Server) RegisterHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
-
+	pastr := string(hashedPwd)
 	user := &models.User{
 		Email:        req.Email,
-		PasswordHash: string(hashedPwd),
+		PasswordHash: &pastr,
 	}
 
 	err = database.CreateUser(s.WorkerPool.DB, user)
@@ -147,4 +149,95 @@ func (s *Server) VerifyHandler(c *gin.Context) {
 	database.DeleteVerification(s.WorkerPool.DB, user.ID)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully!"})
+}
+
+func (s *Server) GoogleLoginHandler(c *gin.Context) {
+	url := s.GoogleConfig.AuthCodeURL("state-token")
+	c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+func (s *Server) GoogleCallbackHandler(c *gin.Context) {
+	code := c.Query("code")
+	token, err := s.GoogleConfig.Exchange(context.Background(), code)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Failed to exchange token"})
+		return
+	}
+
+	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user info"})
+		return
+	}
+	defer resp.Body.Close()
+
+	// 🔑 Use 'id' to map Google's unique identifier
+	var googleUser struct {
+		ID    string `json:"id"`
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&googleUser); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode user info"})
+		return
+	}
+
+	user, err := database.GetUserByEmail(s.WorkerPool.DB, googleUser.Email)
+	if err != nil {
+		// New Google users are automatically verified
+		user = &models.User{
+			Email:      googleUser.Email,
+			IsVerified: true,
+		}
+		if err := database.CreateUser(s.WorkerPool.DB, user); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+			return
+		}
+	}
+
+	// Link Google Identity
+	database.AddUserIdentity(s.WorkerPool.DB, user.ID, "google", googleUser.ID)
+
+	jwtToken, err := utils.GenerateToken(uint(user.ID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": jwtToken})
+}
+
+type SetPasswordRequest struct {
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+func (s *Server) SetPasswordHandler(c *gin.Context) {
+	// 🛡️ Use "user_id" and (uint) type to match AuthMiddleware
+	val, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID := int(val.(uint))
+
+	var req SetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	if err := database.UpdateUserPassword(s.WorkerPool.DB, userID, string(hashedPwd)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
+
+	// Register the 'local' identity method for this user
+	database.AddUserIdentity(s.WorkerPool.DB, userID, "local", "")
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password set successfully"})
 }

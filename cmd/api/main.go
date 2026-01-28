@@ -45,12 +45,14 @@ func main() {
 	r.POST("/register", srv.RegisterHandler)
 	r.POST("/verify", srv.VerifyHandler)
 	r.POST("/login", srv.LoginHandler)
-
+	r.GET("/auth/google/login", srv.GoogleLoginHandler)
+	r.GET("/auth/google/callback", srv.GoogleCallbackHandler)
 	protected := r.Group("/api")
 	protected.Use(srv.AuthMiddleware())
 	{
 
 		protected.GET("/profile", srv.ProfileHandler)
+		protected.POST("/set-password", srv.SetPasswordHandler)
 
 	}
 
