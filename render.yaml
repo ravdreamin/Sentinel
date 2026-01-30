@@ -25,7 +25,6 @@ services:
   - type: web
     name: sentinel-frontend
     env: static
-    region: oregon
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
