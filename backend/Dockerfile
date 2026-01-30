@@ -29,8 +29,7 @@ RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/
     mv migrate /usr/bin/migrate
 
 # Copy binary from builder
-COPY --from=builder /app/main .
-COPY --from=builder /app/.env . 
+COPY --from=builder /app/main . 
 
 # Copy migrations (Assumes migrations directory is in the build context root)
 COPY migrations /migrations
