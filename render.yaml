@@ -5,10 +5,9 @@ services:
   - type: web
     name: sentinel-backend
     env: docker
-    region: oregon 
+    region: oregon
     plan: free
     rootDir: backend
-    # Environment variables
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -17,22 +16,21 @@ services:
       - key: PORT
         value: 8081
       - key: EMAIL_APIKEY
-        sync: false # You must set this manually in the Render Dashboard!
+        sync: false
     autoDeploy: true
 
   # --------------------------------------------------------------------------
-  # Frontend Service (Static Site)
+  # Frontend Service (Static)
   # --------------------------------------------------------------------------
-  - type: static_site
+  - type: web
     name: sentinel-frontend
+    env: static
     region: oregon
+    plan: free
     rootDir: frontend
-    buildCommand: npm run build
-    publishDir: dist
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
     routes:
-      # Rewrite API calls to the Backend Service
-      # IMPORTANT: After deployment, check your backend URL and update these destinations 
-      # if 'sentinel-backend' is not the assigned subdomain.
       - type: rewrite
         source: /api/*
         destination: https://sentinel-backend.onrender.com/api/*
@@ -48,8 +46,6 @@ services:
       - type: rewrite
         source: /login
         destination: https://sentinel-backend.onrender.com/login
-      
-      # Single Page Application (SPA) Fallback
       - type: rewrite
         source: /*
         destination: /index.html
