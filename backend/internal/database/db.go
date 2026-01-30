@@ -10,13 +10,18 @@ import (
 
 func Connect() (*pgxpool.Pool, error) {
 
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASS"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
+	var dsn string
+	if os.Getenv("DATABASE_URL") != "" {
+		dsn = os.Getenv("DATABASE_URL")
+	} else {
+		dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+			os.Getenv("DB_USER"),
+			os.Getenv("DB_PASS"),
+			os.Getenv("DB_HOST"),
+			os.Getenv("DB_PORT"),
+			os.Getenv("DB_NAME"),
+		)
+	}
 
 	cfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {

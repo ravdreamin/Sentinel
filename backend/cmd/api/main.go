@@ -63,8 +63,13 @@ func main() {
 
 	}
 
-	fmt.Println("Listening at 8081:")
-	if err := r.Run(":8081"); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8081"
+	}
+
+	fmt.Printf("Listening at %s:\n", port)
+	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Server failed to start: ", err)
 	}
 

@@ -1,0 +1,41 @@
+services:
+  # Backend Service
+  backend:
+    build: ./backend
+    container_name: sentinel-backend
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgres://admin:password@db:5432/sentinel?sslmode=disable
+    depends_on:
+      - db
+    restart: always
+
+  # Frontend Service
+  frontend:
+    build: ./frontend
+    container_name: sentinel-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+  # Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: sentinel-db
+    restart: always
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=sentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
