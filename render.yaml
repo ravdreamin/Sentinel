@@ -23,7 +23,7 @@ services:
   # --------------------------------------------------------------------------
   # Frontend Service (Static Site)
   # --------------------------------------------------------------------------
-  - type: static
+  - type: static_site
     name: sentinel-frontend
     region: oregon
     rootDir: frontend
