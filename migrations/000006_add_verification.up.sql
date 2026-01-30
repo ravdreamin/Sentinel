@@ -1,9 +1,0 @@
-ALTER TABLE users
-ADD COLUMN is_verified BOOLEAN DEFAULT FALSE;
-
-CREATE TABLE IF NOT EXISTS verifications (
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    code VARCHAR(6) NOT NULL,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    PRIMARY KEY (user_id)
-);

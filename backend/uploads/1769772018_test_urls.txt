@@ -1,0 +1,10 @@
+https://example.com
+https://httpbin.org/get
+https://jsonplaceholder.typicode.com/posts
+https://jsonplaceholder.typicode.com/users
+https://jsonplaceholder.typicode.com/comments
+https://www.wikipedia.org
+https://api.github.com
+https://www.stackoverflow.com
+https://www.medium.com
+https://www.reddit.com

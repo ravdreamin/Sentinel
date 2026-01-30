@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "JetBrains Mono", monospace;
+
+  --color-background: #050505;
+  --color-foreground: #e5e5e5;
+
+  --color-card: #0a0a0a;
+  --color-card-foreground: #e5e5e5;
+
+  --color-primary: #ffffff;
+  --color-primary-foreground: #000000;
+
+  --color-secondary: #262626;
+  --color-secondary-foreground: #fafafa;
+
+  --color-muted: #262626;
+  --color-muted-foreground: #a3a3a3;
+
+  --color-accent: #ffffff;
+  --color-accent-foreground: #000000;
+
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  --color-border: #404040;
+  --color-input: #404040;
+  --color-ring: #ffffff;
+
+  --radius: 0px;
+}
+
+body {
+  @apply bg-background text-foreground font-mono antialiased;
+  background-image: linear-gradient(to right, #111 1px, transparent 1px),
+    linear-gradient(to bottom, #111 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+* {
+  @apply border-border;
+}

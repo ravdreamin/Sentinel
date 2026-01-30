@@ -1,3 +1,0 @@
-ALTER TABLE jobs
-ADD COLUMN file_path TEXT,
-ADD COLUMN job_type TEXT NOT NULL DEFAULT 'web';
