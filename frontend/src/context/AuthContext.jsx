@@ -35,20 +35,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const login = async (email, password) => {
-        const { data } = await api.post('/login', { email, password });
-        localStorage.setItem('token', data.token);
-        localStorage.removeItem('isGuest');
-        setIsGuest(false);
-        await checkAuth();
+    const login = (userData, token, isGuest = false) => {
+        localStorage.setItem('token', token);
+        if (isGuest) {
+            localStorage.setItem('isGuest', 'true');
+            setIsGuest(true);
+        } else {
+            localStorage.removeItem('isGuest');
+            setIsGuest(false);
+        }
+        setUser(userData);
     };
 
     const register = async (email, password) => {
-        await api.post('/register', { email, password });
+        await api.post('/api/auth/register', { email, password });
     };
 
     const verify = async (email, code) => {
-        await api.post('/verify', { email, code });
+        await api.post('/api/auth/verify', { email, code });
     }
 
     const loginAsGuest = () => {

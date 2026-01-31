@@ -18,7 +18,7 @@ export default function Register() {
         setError('');
 
         try {
-            await api.post('/register', { email, password });
+            await api.post('/api/auth/register', { email, password });
             setSuccess(true);
         } catch (err) {
             setError(err.response?.data?.error || 'Registration failed');
@@ -32,22 +32,7 @@ export default function Register() {
     };
 
     if (success) {
-        return (
-            <div className="min-h-screen bg-neutral-950 text-white font-sans flex flex-col items-center justify-center px-8">
-                <div className="w-full max-w-sm text-center space-y-6">
-                    <div className="w-16 h-16 mx-auto bg-green-500/10 rounded-full flex items-center justify-center">
-                        <span className="text-3xl">✓</span>
-                    </div>
-                    <h1 className="text-2xl font-semibold">Check your email</h1>
-                    <p className="text-neutral-400">We sent a verification link to {email}</p>
-                    <Link to="/login">
-                        <Button className="w-full h-12 bg-white text-black hover:bg-neutral-200 rounded-xl font-medium">
-                            Back to login
-                        </Button>
-                    </Link>
-                </div>
-            </div>
-        );
+        return <Navigate to="/verify" state={{ email }} />;
     }
 
     return (

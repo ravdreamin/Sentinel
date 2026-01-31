@@ -22,6 +22,9 @@ export default function Landing() {
                         </Link>
                     ) : (
                         <>
+                            <Link to="/dashboard" className="text-sm text-neutral-400 hover:text-white transition-colors">
+                                Dashboard
+                            </Link>
                             <Link to="/login" className="text-sm text-neutral-400 hover:text-white transition-colors">
                                 Log in
                             </Link>

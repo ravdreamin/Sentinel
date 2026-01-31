@@ -40,11 +40,14 @@ func main() {
 
 	r := gin.Default()
 
-	r.POST("/register", srv.RegisterHandler)
-	r.POST("/verify", srv.VerifyHandler)
-	r.POST("/login", srv.LoginHandler)
-	r.GET("/auth/google/login", srv.GoogleLoginHandler)
-	r.GET("/auth/google/callback", srv.GoogleCallbackHandler)
+	auth := r.Group("/api/auth")
+	{
+		auth.POST("/register", srv.RegisterHandler)
+		auth.POST("/verify", srv.VerifyHandler)
+		auth.POST("/login", srv.LoginHandler)
+		auth.GET("/google/login", srv.GoogleLoginHandler)
+		auth.GET("/google/callback", srv.GoogleCallbackHandler)
+	}
 	protected := r.Group("/api")
 	protected.Use(srv.AuthMiddleware())
 	{
