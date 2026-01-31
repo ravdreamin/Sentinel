@@ -105,8 +105,8 @@ func (s *Server) RegisterHandler(c *gin.Context) {
 
 	err = database.SaveVerification(s.WorkerPool.DB, verification)
 	if err != nil {
-		// In a real app, we might want to rollback the user creation here
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save verification code"})
+		fmt.Printf("❌ SaveVerification Error: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to save verification code: %v", err)})
 		return
 	}
 
