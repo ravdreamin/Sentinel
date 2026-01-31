@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"sentinel/internal/database"
 	"sentinel/internal/models"
 	"sentinel/internal/utils"
@@ -205,8 +206,11 @@ func (s *Server) GoogleCallbackHandler(c *gin.Context) {
 	}
 
 	// Redirect to frontend with token
-	frontendURL := "http://localhost:5173/google-callback?token=" + jwtToken
-	c.Redirect(http.StatusTemporaryRedirect, frontendURL)
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:5173"
+	}
+	c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/google-callback?token=%s", frontendURL, jwtToken))
 }
 
 type SetPasswordRequest struct {
