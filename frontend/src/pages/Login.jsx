@@ -7,7 +7,7 @@ import api from '../lib/api';
 
 export default function Login() {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, loginAsGuest } = useAuth();
     const [searchParams] = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -33,7 +33,7 @@ export default function Login() {
     };
 
     const handleGuestLogin = () => {
-        login({ id: 0 }, 'guest_token', true);
+        loginAsGuest();
         navigate('/dashboard');
     };
 
